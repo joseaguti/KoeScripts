@@ -1,0 +1,134 @@
+glast_01,206,86,4	script	Arcturus#quest_caidos	412,{
+	mes "[Arcturus el Pardo]";
+	if(getcharid(2) != 10016){
+		mes "...";
+		close;
+	}
+	if($inquestcaidos){
+		if($inquestcaidos == getcharid(0)){
+			// TODO : Comprobar si ha terminado la quest
+			if(@questcaidos == 1){
+				mes "¡Lo has logrado! ¡Muchas gracias!";
+				@fe++;
+				getitem 7220,15000;
+				set $inquestcaidos, 0;
+				set @questcaidos,0;
+				close;
+				
+			} else {
+				mes "El alma en pena se encuentra en "+$cq_map_sel$+" "+$cp_x+" "+$cp_y;
+				mes "Cuento contigo.";
+				close;
+			}
+		} else {
+			mes "Lo siento, ahora mismo estoy ocupado.";
+			close;
+		}
+		
+	}
+	
+	if(gettimetick(2) - @cq_time_quest < 604800){
+		mes "Salve, ángel del caos.... Por el momento todo va bien.";
+		close;
+	}
+	
+
+	mes "Salve, ángel del caos.... Requiero de su ayuda.";
+	.@option = select("¿Qué necesitas?:No me hagas perder el tiempo");
+	if(.@option == 2){
+		mes "No le importunaré más, pues...";
+		close;
+	}
+	mes "A mis oidos ha llegado, que un alma ha caido en desgracia,";
+	mes "pues se halla cautiva en el oscuro infierno de Loki.";
+	mes "Ya que este alma renegaba de todo dios y este fue su injusto castigo.";
+	next;
+	mes "[Arcturus el Pardo]";
+	mes "Se de buena mano, que sólo un valiente ángel del caos puede salvarle de su tormento.";
+	mes "¿Será usted tal valiente heroe que entregue la libertad a el alma atormentada?";
+	.@option = select("Por Lucifer que si:Debo ocuparme de otros asuntos");
+	if(.@option == 2){
+		mes "No le importunaré más, pues...";
+		close;
+	}
+	// Inicio de la quest 
+	set @questcaidos,0;
+	set $inquestcaidos,getcharid(0);
+	// No funciona con strings
+	//setarray .@maps$[0] "codicia","gl_chyard","gl_step","ice_dun01","mag_dun01","mag_dun02";
+	set .@maps$[0], "codicia";
+	set .@maps$[1], "gl_chyard";
+	set .@maps$[2], "gl_step";
+	set .@maps$[3], "ice_dun01";
+	set .@maps$[4], "mag_dun01";
+	set .@maps$[5], "mag_dun02";
+
+	set $cq_map_sel$,.@maps$[rand(0, 6)];
+	set @cq_time_quest, gettimetick(2);
+
+	// Busqueda de una celda libre aleatoria
+	getfreecell( $cq_map_sel$,$cp_x,$cp_y);
+
+	next;
+	mes "[Arcturus el Pardo]";
+	mes "El alma en pena se encuentra en "+$cq_map_sel$+" "+$cp_x+" "+$cp_y+".";
+	mes "Cuento contigo.";
+	callnpc "Alma condenada#quest_caidos::OnMoveNPC";
+	close;
+
+	OnPCDieEvent:
+		if( $inquestcaidos == 0){
+			end;
+		}
+		if($inquestcaidos != getcharid(0)){
+			end;
+		}
+		getmapxy(.@currentmap$, .@mapx, .@mapy, UNITTYPE_PC);
+		if(getmundo(.@currentmap$) != 4){
+			end;
+		}
+		message "Has fallado en la liberación";
+		set $inquestcaidos, 0;
+		set @questcaidos,0;
+		end;
+		
+	OnPCKillEvent:
+		// Un demonio ha tumbado al caído de la quest
+		if( $inquestcaidos == 0){
+			end;
+		}
+		if(killedrid != $inquestcaidos){
+			end;	
+		}
+		getmapxy(.@currentmap$, .@mapx, .@mapy, UNITTYPE_PC);
+		// Ha sido en el infierno
+		if(getmundo(.@currentmap$) != 4){
+			end;
+		}
+		if(getcharid(2) == 10013){
+			message "Has detenido la liberación";
+			@fe++;
+			set $inquestcaidos, 0;
+		}
+		end;
+}
+
+kamisama,0,0,1	script	Alma condenada#quest_caidos	1309,{
+
+	if( $inquestcaidos == 0){
+			end;
+	}
+	if($inquestcaidos != getcharid(0)){
+			end;
+	}
+	unittalk getcharid(3),"Ven si quieres vivir";
+	set @questcaidos,1;
+	guildmsg 10013, "¡Un caído trata de liberar a un condenado en "+$cq_map_sel$+" "+$cp_x+" "+$cp_y+ "!";
+	disablenpc "Alma condenada#quest_caidos";
+	end;
+OnMoveNPC:
+	warpnpc $cq_map_sel$, $cp_x, $cp_y;
+	enablenpc "Alma condenada#quest_caidos";
+	end;
+	
+}
