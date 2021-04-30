@@ -1,3 +1,272 @@
+
+// Quest demonios
+gl_church,190,188,4	script	Zardan#quest_demo	695,{
+	mes "[Zardan el Sencillo]";
+		if(getcharid(2) != 10013){
+			mes "¿Y tú quien eres?";
+			close;
+		}
+		if($inquestdemo){
+			if($inquestdemo == getcharid(0)){
+
+				if(@questdemo > 20){
+					mes "Chachi.";
+					@fe++;
+					getitem 7220,15000;
+					set $inquestdemo, 0;
+					set @questdemo,0;
+					close;
+					
+				} else {
+					mes "La reliquia está en "+$dq_map_sel$+" "+$dp_x+" "+$dp_y;
+					mes "Dale duro.";
+					close;
+				}
+			} else {
+				mes "Dejame.";
+				close;
+			}
+			
+		}
+		
+		if(gettimetick(2) - @dq_time_quest < 604800){
+			mes "Todo bien ¿O no?";
+			close;
+		}
+		
+
+		mes "¿Qué pasa chaval?";
+		.@option = select("¿Qué necesitas?:Hey");
+		if(.@option == 2){
+			mes "A pasarlo bien.";
+			close;
+		}
+		mes "Por las islas de Odin hemos encontrado una reliquia de los ángeles";
+		mes "estaría bien profanarla ¿Qué dices?";
+		.@option = select("Glorya al Amo, la reliquia será profanada:Debo ocuparme de otros asuntos");
+		if(.@option == 2){
+			mes "Pues nada, a pasarlo bien.";
+			close;
+		}
+		// Inicio de la quest 
+		set @questdemo,0;
+		set $inquestdemo,getcharid(0);
+
+		set .@maps$[0], "odin_tem01";
+		set .@maps$[1], "odin_tem02";
+		set .@maps$[2], "odin_tem03";
+
+		set $dq_map_sel$,.@maps$[rand(0, 2)];
+		set @dq_time_quest, gettimetick(2);
+
+		// Busqueda de una celda libre aleatoria
+		getfreecell( $dq_map_sel$,$dp_x,$dp_y);
+
+		next;
+		mes "[Zardan el Sencillo]";
+		mes "La reliquia está en "+$dq_map_sel$+" "+$dp_x+" "+$dp_y+".";
+		mes "Dale duro.";
+		callnpc "Reliquia#quest_demo::OnMoveNPC";
+		close;
+
+		OnPCDieEvent:
+			if( $inquestdemo == 0){
+				end;
+			}
+			if($inquestdemo != getcharid(0)){
+				end;
+			}
+			getmapxy(.@currentmap$, .@mapx, .@mapy, UNITTYPE_PC);
+			set .@maps$[0], "odin_tem01";
+			set .@maps$[1], "odin_tem02";
+			set .@maps$[2], "odin_tem03";
+			.@flag = 0;
+			for(.@i = 0;.@i < 3;.@i++){
+				if(.@maps$[.@i] == .@currentmap$){
+					.@flag = 1;
+					break;
+				}
+			}
+			if(.@flag == 0){
+				end;
+			}
+			message strcharinfo(0),"Has fallado en la profanación";
+			set $inquestdemo, 0;
+			set @questdemo,0;
+			end;
+			
+		OnPCKillEvent:
+			// Un ángel ha tumbado al demonio de la quest
+			if( $inquestdemo == 0){
+				end;
+			}
+			if(killedrid != $inquestdemo){
+				end;	
+			}
+			getmapxy(.@currentmap$, .@mapx, .@mapy, UNITTYPE_PC);
+			// Ha sido en las islas Odin
+			set .@maps$[0], "odin_tem01";
+			set .@maps$[1], "odin_tem02";
+			set .@maps$[2], "odin_tem03";
+			.@flag = 0;
+			for(.@i = 0;.@i < 3;.@i++){
+				if(.@maps$[.@i] == .@currentmap$){
+					.@flag = 1;
+					break;
+				}
+			}
+			if(.@flag == 0){
+				end;
+			}
+			if(getcharid(2) == 10012){
+				message  strcharinfo(0),"Has detenido la profanación";
+				@fe++;
+				set $inquestdemo, 0;
+			}
+			end;
+}
+
+// Quest ángeles 
+nameless_n,165,198,4	script	Klara#quest_angel	811,{
+	mes "[Klara la Severa]";
+		// No pertenece a la Orden de la Luz
+		if(getcharid(2) != 10012){
+			mes "No molestes.";
+			close;
+		}
+		// La quest está en curso
+		if($inquestangel){
+			// ¿Es el personaje el que está en la quest?
+			if($inquestangel == getcharid(0)){
+
+				// Se ha apaciguado el suficiente número de veces
+				if(@questangel > 20){
+					mes "¡Victoria! La paz estará garantizada... al menos por un tiempo.";
+					// Gana fe y 15k de ectos
+					@fe++;
+					getitem 7220,15000;
+					set $inquestangel, 0;
+					set @questangel,0;
+					close;
+					
+				} else {
+					// Recordatorio del mapa
+					mes "El espiritu rebelde está en "+$aq_map_sel$+" "+$ap_x+" "+$ap_y;
+					mes "Suerte.";
+					close;
+				}
+			} else {
+				// No es el personaje que está haciendo la quest
+				mes "Estoy ocupada en un asunto de vital importancia.";
+				close;
+			}
+			
+		}
+		
+		// El personaje ya hizo la quest esta semana
+		if(gettimetick(2) - @aq_time_quest < 604800){
+			mes "Por el momento, la luz protegere estás tierras.";
+			close;
+		}
+		
+
+		mes "Paz, honor y bien ángel de Odin. Necesitamos de tu ayuda.";
+		.@option = select("¿Qué ocurre, hermana?:Por desgracia, tengo otros asuntos");
+		if(.@option == 2){
+			mes "No tarde mucho, es importante.";
+			close;
+		}
+		mes "Los ángeles del caos han organizado un númeroso grupo de espiritus disidentes";
+		mes "temo que piensen en apoderarse del Limbo y acabar con todo Orden.";
+		next;
+		mes "[Klara la Severa]";
+		mes "Por suerte... contamos con una reliquia que es capaz de apaciguar";
+		mes "a esos espiritus rebeldes.";
+		mes "¿Nos ayudará a detener esta insurreción?";
+		
+		.@option = select("Por el Padre Odin, lo haré:Debo ocuparme de otros asuntos");
+		if(.@option == 2){
+			mes "No tarde mucho, es importante.";
+			close;
+		}
+		// Inicio de la quest 
+		set @questangel,0;
+		set $inquestangel,getcharid(0);
+
+		set .@maps$[0], "moc_fild20";
+		set .@maps$[1], "moc_fild21";
+		set .@maps$[2], "moc_fild22";
+
+		set $aq_map_sel$,.@maps$[rand(0, 2)];
+		set @aq_time_quest, gettimetick(2);
+
+		// Busqueda de una celda libre aleatoria
+		getfreecell( $aq_map_sel$,$ap_x,$ap_y);
+
+		next;
+		mes "[Klara la Severa]";
+		mes "El espiritu rebelde se encuentra "+$aq_map_sel$+" "+$ap_x+" "+$ap_y+".";
+		mes "Suerte.";
+	//	callnpc "Reliquia#quest_demo::OnMoveNPC";
+		close;
+
+		OnPCDieEvent:
+			if( $inquestangel == 0){
+				end;
+			}
+			if($inquestangel != getcharid(0)){
+				end;
+			}
+			getmapxy(.@currentmap$, .@mapx, .@mapy, UNITTYPE_PC);
+			set .@maps$[0], "moc_fild20";
+			set .@maps$[1], "moc_fild21";
+			set .@maps$[2], "moc_fild22";
+			.@flag = 0;
+			for(.@i = 0;.@i < 3;.@i++){
+				if(.@maps$[.@i] == .@currentmap$){
+					.@flag = 1;
+					break;
+				}
+			}
+			if(.@flag == 0){
+				end;
+			}
+			message strcharinfo(0),"Has fallado en la apaciguación.";
+			set $inquestangel, 0;
+			set @questangel,0;
+			end;
+			
+		OnPCKillEvent:
+			// Un ángel ha tumbado al demonio de la quest
+			if( $inquestangel == 0){
+				end;
+			}
+			if(killedrid != $inquestangel){
+				end;	
+			}
+			getmapxy(.@currentmap$, .@mapx, .@mapy, UNITTYPE_PC);
+			// Ha sido en las islas Odin
+			set .@maps$[0], "odin_tem01";
+			set .@maps$[1], "odin_tem02";
+			set .@maps$[2], "odin_tem03";
+			.@flag = 0;
+			for(.@i = 0;.@i < 3;.@i++){
+				if(.@maps$[.@i] == .@currentmap$){
+					.@flag = 1;
+					break;
+				}
+			}
+			if(.@flag == 0){
+				end;
+			}
+			if(getcharid(2) == 10016){
+				message  strcharinfo(0),"Has detenido la apaciguación.";
+				@fe++;
+				set $inquestangel, 0;
+			}
+			end;
+}	
+
 glast_01,206,86,4	script	Arcturus#quest_caidos	412,{
 	mes "[Arcturus el Pardo]";
 	if(getcharid(2) != 10016){
@@ -87,7 +356,7 @@ glast_01,206,86,4	script	Arcturus#quest_caidos	412,{
 		if(getmundo(.@currentmap$) != 4){
 			end;
 		}
-		message "Has fallado en la liberación";
+		message strcharinfo(0),"Has fallado en la liberación.";
 		set $inquestcaidos, 0;
 		set @questcaidos,0;
 		end;
@@ -106,12 +375,72 @@ glast_01,206,86,4	script	Arcturus#quest_caidos	412,{
 			end;
 		}
 		if(getcharid(2) == 10013){
-			message "Has detenido la liberación";
+			message strcharinfo(0),"Has detenido la liberación.";
 			@fe++;
 			set $inquestcaidos, 0;
 		}
 		end;
 }
+
+
+
+kamisama,0,0,1	script	Espiritu rebelde#quest_angel	1309,{
+
+	if( $inquestangel == 0){
+			end;
+	}
+	if($inquestangel != getcharid(0)){
+			end;
+	}
+	if(gettimetick(2) - @delay_quest_limbo < 3){
+		end;
+	}
+	set @delay_quest_limbo, gettimetick(2);
+	unittalk getcharid(3),"Padre Odin, apacigua a este espiritu";
+	@questangel++;
+	guildmsg 10016, "¡Un ángel está apaciguando a un espiritu rebelde en "+$aq_map_sel$+" "+$ap_x+" "+$ap_y+ "!";
+	
+	if(@questangel > 20){
+		message strcharinfo(0),"Has apaciguado al espiritu";
+		disablenpc "Espiritu rebelde#quest_angel";
+		end;
+	}
+OnMoveNPC:
+	warpnpc $aq_map_sel$, $ap_x, $ap_y;
+	enablenpc "Espiritu rebelde#quest_angel";
+	end;
+	
+}
+
+
+kamisama,0,0,1	script	Reliquia#quest_demo	1309,{
+
+	if( $inquestdemo == 0){
+			end;
+	}
+	if($inquesdemo != getcharid(0)){
+			end;
+	}
+	if(gettimetick(2) - @delay_quest_limbo < 3){
+		end;
+	}
+	set @delay_quest_limbo, gettimetick(2);
+	unittalk getcharid(3),"¡En el nombre de Loki, maldita sea esta reliquia!";
+	@questdemo++;
+	guildmsg 10012, "¡Un demonio está profanado la reliquia en "+$cq_map_sel$+" "+$cp_x+" "+$cp_y+ "!";
+	
+	if(@questcaidos > 20){
+		message strcharinfo(0),"Has profanado la reliquia.";
+		disablenpc "Reliquia#quest_demo";
+		end;
+	}
+OnMoveNPC:
+	warpnpc $dq_map_sel$, $dp_x, $dp_y;
+	enablenpc "Reliquia#quest_demo";
+	end;
+	
+}
+
 
 kamisama,0,0,1	script	Alma condenada#quest_caidos	1309,{
 
